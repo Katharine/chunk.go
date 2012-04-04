@@ -176,11 +176,11 @@ func TestSubChunks(t *testing.T) {
 
 	checkByte(chunkIN2, 129, t)
 
-    // Check that we can't create a chunk when there is no more file.
-    _, err = Make(f)
-    if err != io.EOF {
-        t.Error("Successfully created chunk past EOF")
-    }
+	// Check that we can't create a chunk when there is no more file.
+	_, err = Make(f)
+	if err != io.EOF {
+		t.Error("Successfully created chunk past EOF")
+	}
 }
 
 func TestTTY(t *testing.T) {
