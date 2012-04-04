@@ -16,8 +16,8 @@ type Chunk struct {
 }
 
 // Returns a new chunk. An instance of Chunk is specifically allowed as the
-// argument to Make. This is used to read chunks inside other chunks.
-func Make(f io.ReadSeeker) (*Chunk, error) {
+// argument to New. This is used to read chunks inside other chunks.
+func New(f io.ReadSeeker) (*Chunk, error) {
 	id := make([]byte, 4)
 	if n, err := f.Read(id); n != 4 || err != nil {
 		return nil, err

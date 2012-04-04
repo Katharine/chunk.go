@@ -16,7 +16,7 @@ var testString = []byte{
 func TestHeader(t *testing.T) {
 	f := bytes.NewReader(testString)
 
-	chunk, err := Make(f)
+	chunk, err := New(f)
 	if err != nil {
 		t.Errorf("Failed to create Chunk: '%s'", err)
 	}
@@ -32,7 +32,7 @@ func TestHeader(t *testing.T) {
 	// Try a multi-byte size.
 	// NOTE: Invalid file.
 	f = bytes.NewReader([]byte{'T', 'E', 'S', 'T', 0x12, 0x34, 0x56, 0x78})
-	chunk, _ = Make(f)
+	chunk, _ = New(f)
 	if size := chunk.Size(); size != 305419896 {
 		t.Errorf("Multi-byte size %d != 305419896", size)
 	}
@@ -41,7 +41,7 @@ func TestHeader(t *testing.T) {
 func TestBasicRead(t *testing.T) {
 	f := bytes.NewReader(testString)
 
-	chunk, _ := Make(f)
+	chunk, _ := New(f)
 
 	buffer := make([]byte, 10)
 	if n, err := chunk.Read(buffer); n != 2 || err != nil {
@@ -61,7 +61,7 @@ func TestBasicRead(t *testing.T) {
 func TestSkip(t *testing.T) {
 	f := bytes.NewReader(testString)
 
-	chunk, _ := Make(f)
+	chunk, _ := New(f)
 	chunk.Skip()
 
 	// Check that we can't read it.
@@ -71,7 +71,7 @@ func TestSkip(t *testing.T) {
 	}
 
 	// Check that we've advanced to the *next* chunk.
-	if chunkFoo, err := Make(f); err == nil {
+	if chunkFoo, err := New(f); err == nil {
 		if name := chunkFoo.Name(); name != "FOO " {
 			t.Errorf("Next chunk not called \"FOO \" (got \"%s\")", name)
 		}
@@ -93,9 +93,9 @@ func checkByte(chunk *Chunk, expected byte, t *testing.T) {
 
 func TestSeek(t *testing.T) {
 	f := bytes.NewReader(testString)
-	chunkTest, _ := Make(f)
+	chunkTest, _ := New(f)
 	chunkTest.Skip()
-	chunkFoo, _ := Make(f)
+	chunkFoo, _ := New(f)
 
 	// This test will ignore the internal structure of FOO  and simply check that we can seek through it.
 
@@ -148,11 +148,11 @@ func TestSeek(t *testing.T) {
 // Test if we can read chunks inside chunks
 func TestSubChunks(t *testing.T) {
 	f := bytes.NewReader(testString)
-	chunkTest, _ := Make(f)
+	chunkTest, _ := New(f)
 	chunkTest.Skip()
-	chunkFoo, _ := Make(f)
+	chunkFoo, _ := New(f)
 
-	chunkIN1, err := Make(chunkFoo)
+	chunkIN1, err := New(chunkFoo)
 	if err != nil {
 		t.Errorf("Failed to create chunkIN1 from chunkFoo: %s", err)
 	}
@@ -162,7 +162,7 @@ func TestSubChunks(t *testing.T) {
 	}
 
 	chunkIN1.Skip()
-	chunkIN2, err := Make(chunkFoo)
+	chunkIN2, err := New(chunkFoo)
 
 	if err != nil {
 		t.Errorf("Failed to create chunkIN2 from chunkFoo: %s", err)
@@ -179,7 +179,7 @@ func TestSubChunks(t *testing.T) {
 	checkByte(chunkIN2, 129, t)
 
 	// Check that we can't create a chunk when there is no more file.
-	_, err = Make(f)
+	_, err = New(f)
 	if err != io.EOF {
 		t.Error("Successfully created chunk past EOF")
 	}
@@ -188,11 +188,11 @@ func TestSubChunks(t *testing.T) {
 // Test if reading padded chunks allows us to continue to the next chunk
 func TestReadPadding(t *testing.T) {
 	f := bytes.NewReader(testString)
-	chunkTest, _ := Make(f)
+	chunkTest, _ := New(f)
 	chunkTest.Skip()
-	chunkFoo, _ := Make(f)
+	chunkFoo, _ := New(f)
 
-	chunkIN1, _ := Make(chunkFoo)
+	chunkIN1, _ := New(chunkFoo)
 
 	data := make([]byte, chunkIN1.Size())
 	chunkIN1.Read(data)
@@ -200,7 +200,7 @@ func TestReadPadding(t *testing.T) {
 		t.Error("First chunk didn't have expected content")
 	}
 
-	chunkIN2, err := Make(chunkFoo)
+	chunkIN2, err := New(chunkFoo)
 	if err != nil {
 		t.Errorf("Error creating second chunk: %s", err)
 	}
@@ -211,7 +211,7 @@ func TestReadPadding(t *testing.T) {
 
 func TestTTY(t *testing.T) {
 	f := bytes.NewReader(testString)
-	chunk, _ := Make(f)
+	chunk, _ := New(f)
 	if chunk.IsTTY() {
 		t.Error("Chunk is apparently a TTY!?")
 	}
