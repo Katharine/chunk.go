@@ -1,8 +1,10 @@
 package chunk
 
-import "testing"
-import "bytes"
-import "io"
+import (
+	"bytes"
+	"io"
+	"testing"
+)
 
 var testString = []byte{
 	'T', 'E', 'S', 'T', 0, 0, 0, 2, 42, 24,
@@ -180,6 +182,30 @@ func TestSubChunks(t *testing.T) {
 	_, err = Make(f)
 	if err != io.EOF {
 		t.Error("Successfully created chunk past EOF")
+	}
+}
+
+// Test if reading padded chunks allows us to continue to the next chunk
+func TestReadPadding(t *testing.T) {
+	f := bytes.NewReader(testString)
+	chunkTest, _ := Make(f)
+	chunkTest.Skip()
+	chunkFoo, _ := Make(f)
+
+	chunkIN1, _ := Make(chunkFoo)
+
+	data := make([]byte, chunkIN1.Size())
+	chunkIN1.Read(data)
+	if !bytes.Equal(data, []byte{255}) {
+		t.Error("First chunk didn't have expected content")
+	}
+
+	chunkIN2, err := Make(chunkFoo)
+	if err != nil {
+		t.Errorf("Error creating second chunk: %s", err)
+	}
+	if name := chunkIN2.Name(); name != "IN2 " {
+		t.Errorf("Second chunk named '%s'; expected 'IN2 '", name)
 	}
 }
 

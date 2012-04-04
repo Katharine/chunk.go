@@ -85,6 +85,14 @@ func (this *Chunk) Read(buffer []byte) (n int, err error) {
 	}
 	n, err = this.file.Read(buffer)
 	this.offset += uint32(n)
+
+	// Check if we need to move up one more.
+	if this.offset == this.size && (this.size&1) == 1 {
+		if _, err := this.file.Seek(1, 1); err == nil {
+			this.offset++
+		}
+	}
+
 	return
 }
 
